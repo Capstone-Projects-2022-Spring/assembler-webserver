@@ -1,0 +1,62 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembler Status Console</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+</head>
+<body>
+    <section class="hero is-success block">
+        <div class="hero-body">
+            <p class="title">
+                Assembler Status console
+            </p>
+            <p class="subtitle">
+                All services are working properly.
+            </p>
+        </div>
+    </section>
+    <section>
+        <article class="message container">
+            <div class="message-header is-info">
+                <p>Networking Statistics</p>
+            </div>
+            <div class="message-body" id="network-stats">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque risus mi, tempus quis placerat ut, porta nec nulla. Vestibulum rhoncus ac ex sit amet fringilla. Nullam gravida purus diam, et dictum felis venenatis efficitur. Aenean ac eleifend lacus, in mollis lectus. Donec sodales, arcu et sollicitudin porttitor, tortor urna tempor ligula, id porttitor mi magna a neque. Donec dui urna, vehicula et sem eget, facilisis sodales sem. 
+            </div>
+        </article>    
+    </section>
+</body>
+<script>
+    (function ready(fn) {
+        if(document.readyState != 'loading') {
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    })(function() {
+        //will be executed when document is ready
+        console.log('test');
+
+        var request = new XMLHttpRequest();
+
+        request.open('GET', '/data', true);
+
+        request.onload = function() {
+            if(this.status >= 200 && this.status < 400) {
+                //Request successful, payload in this.response
+                let data = JSON.parse(this.response);
+            } else {
+                //Request succeeded but with bad status code
+            }
+        }
+        request.onerror = function() {
+                console.log('an error occurred during the request.');
+            }
+
+        request.send();
+
+    });
+</script>
+</html>
