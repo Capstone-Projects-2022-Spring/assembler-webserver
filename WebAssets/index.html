@@ -79,17 +79,18 @@
                 dataPoints: dps
             }]
         });
+
+        let updateChart = () => {
+            if(window.dps.length > 20) {
+                window.dps.shift();
+            }
+            window.dps.push(window._data);
+            chart.render();
+        }
+
         updateChart();
         setInterval(updateChart, 5000);
     });
-
-    let updateChart = () => {
-        if(window.dps.length > 20) {
-            window.dps.shift();
-        }
-        window.dps.push(window._data);
-        chart.render();
-    }
 
     let refresh = () => {
         var request = new XMLHttpRequest();
