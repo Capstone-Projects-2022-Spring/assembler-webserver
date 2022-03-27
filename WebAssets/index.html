@@ -18,23 +18,31 @@
         </div>
     </section>
     <section>
-        <table class="table" id="network-stats-table">
-            <thead>
-                <tr>
-                    <th>Server Time</th>
-                    <th>connections</th>
-                    <th>MaxSendRate</th>
-                    <th>MaxRecvRate</th>
-                    <th>SendQueue</th>
-                    <th>ReceiveQueue</th>
-                    <th>SendBuffer</th>
-                    <th>ReceiveBuffer</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        <div class="columns">
+            <div class="column is-half">
+                <table class="table" id="network-stats-table">
+                    <thead>
+                        <tr>
+                            <th>Server Time</th>
+                            <th>connections</th>
+                            <th>MaxSendRate</th>
+                            <th>MaxRecvRate</th>
+                            <th>SendQueue</th>
+                            <th>ReceiveQueue</th>
+                            <th>SendBuffer</th>
+                            <th>ReceiveBuffer</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="column is-half">
+                <div id="chartContainer" style="height:400px;width:100%;"></canvas>
+            </div>
+        </div>
     </section>
 </body>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 <script>
     window._data = {
         time: 0,
@@ -46,6 +54,10 @@
         sendBuffer: 0,
         receiveBuffer: 0
     };
+
+    window._history = [];
+    window.dps = [];
+
     (function ready(fn) {
         if(document.readyState != 'loading') {
             fn();
@@ -57,7 +69,27 @@
         console.log('test');
         refresh();
         setInterval(refresh, 5000);
+
+        let chart = new CanvasJS.Chart('chartContainer', {
+            title: {
+                text: 'Networking Data'
+            },
+            data: [{
+                type: 'line',
+                dataPoints: dps
+            }]
+        });
+        updateChart();
+        setInterval(updateChart, 5000);
     });
+
+    let updateChart = () => {
+        if(window.dps.length > 20) {
+            window.dps.shift();
+        }
+        window.dps.push(window._data);
+        chart.render();
+    }
 
     let refresh = () => {
         var request = new XMLHttpRequest();
@@ -86,6 +118,7 @@
 
     let parseStats = data => {
         let _split = data.split('\n');
+
         window._data.time = _split[0].split(':')[1];
         window._data.connections = _split[1].split(':')[1];
         window._data.maxSendRate = _split[2].split(':')[1];
@@ -94,7 +127,10 @@
         window._data.receiveQueue = _split[5].split(':')[1];
         window._data.sendBuffer = _split[6].split(':')[1];
         window._data.receiveBuffer = _split[7].split(':')[1];
+
+        window._history.push(window._data);
     }
+
     let appendRow = () => {
         let table = document.getElementById('network-stats-table');
 
