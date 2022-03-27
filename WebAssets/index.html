@@ -45,7 +45,7 @@
         receiveQueue: 0,
         sendBuffer: 0,
         receiveBuffer: 0
-    }
+    };
     (function ready(fn) {
         if(document.readyState != 'loading') {
             fn();
@@ -82,7 +82,7 @@
 
         request.send();
     }
-    
+
     let parseStats = data => {
         let _split = data.split('\n');
         window._data.time = _split[0].split(':')[1];
