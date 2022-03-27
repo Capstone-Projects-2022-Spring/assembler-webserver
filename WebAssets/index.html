@@ -68,8 +68,9 @@
             if(this.status >= 200 && this.status < 400) {
                 //Request successful, payload in this.response
                 //let data = JSON.parse(this.response);
-                console.log(this.response);
+                //console.log(this.response);
                 //document.getElementById('network-stats').innerHTML = this.response;
+                let data = this.response;
                 parseStats(data);
                 appendRow();
             } else {
