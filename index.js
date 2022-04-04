@@ -3,23 +3,66 @@
 
 const http = require('http');
 const fs = require('fs');
-const redis = require('redis');
+//const redis = require('redis');
+const amqp = require('amqplib/callback_api');
 
 (async () => {
-    const client = redis.createClient();
-    client.on('error', (err) => console.log('Redis Client Error: ', err));
 
-    await client.connect();
-    const subscriber = client.duplicate();
-    await subscriber.connect();
+    let __data = {in: 0, out: 0};
+    //todo: set 5-second rolling window.
+    //todo: set data every time we pull
 
-    let __data;
+    amqp.connect('amqp://localhost', async (e0, conn) => {
+        if(e0) throw e0; //todo: fix
 
-    await subscriber.subscribe('network-data', message => {
-        //fires when message is received
-        //console.log('message received' + message);
-        console.log('[network-data] ' + message);
-        __data = message;
+        conn.createChannel(async (e1, channel) => {
+            if(e1) throw e1;
+
+            const exchangeIn = 'data-in';
+
+            channel.assertExchange(exchangeIn, 'fanout', {
+                durable: false
+            });
+
+            channel.assertQueue('', {
+                exclusive: true
+            }, async (e2, q) => {
+                if(e2) throw e2;
+
+                console.log(`waiiting for messages in ${q.queue}`);
+                channel.bindQueue(q.queue, exchangeIn, '');
+
+                channel.consume(q.queue, msg => {
+                    if(msg.content) {
+                        console.log("[data-in] " + msg.content.toString());
+                        __data.in += parseInt(msg.content.toString());
+                    }
+                }, {noAck: true});
+            });
+            const exchangeOut = 'data-out';
+
+            channel.assertExchange(exchangeOut, 'fanout', {
+                durable: false
+            });
+
+            channel.assertQueue('', {
+                exclusive: true
+            }, async (e2, q) => {
+                if(e2) throw e2;
+
+                console.log(`waiiting for messages in ${q.queue}`);
+                channel.bindQueue(q.queue, exchangeOut, '');
+
+                channel.consume(q.queue, msg => {
+                    if(msg.content) {
+                        console.log("[data-out] " + msg.content.toString());
+                        __data.out += parseInt(msg.content.toString());
+                    }
+                }, {noAck: true});
+            });
+
+        })
+
     });
 
     const server = http.createServer(async (request, response) => {
@@ -35,10 +78,11 @@ const redis = require('redis');
                 response.end(data);
             });    
         }
-        if(request.url === '/data') {
-            console.log('GET /data');
+        if(request.url === '/data.json') {
+            console.log('GET /data.json');
             response.writeHead(200);
-            response.end(__data);
+            response.end(JSON.stringify(__data));
+            __data = {in: 0, out: 0};
         }
     });
     server.listen(3000);

@@ -24,13 +24,8 @@
                     <thead>
                         <tr>
                             <th>Server Time</th>
-                            <th>connections</th>
-                            <th>MaxSendRate</th>
-                            <th>MaxRecvRate</th>
-                            <th>SendQueue</th>
-                            <th>ReceiveQueue</th>
-                            <th>SendBuffer</th>
-                            <th>ReceiveBuffer</th>
+                            <th>Packets Out</th>
+                            <th>Packets In</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -42,17 +37,12 @@
         </div>
     </section>
 </body>
-<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
     window._data = {
         time: 0,
-        connections: 0,
-        maxSendRate: 0,
-        maxRecvRate: 0,
-        sendQueue: 0,
-        receiveQueue: 0,
-        sendBuffer: 0,
-        receiveBuffer: 0
+        packetsOut: 0,
+        packetsIn: 0
     };
 
     window._history = [];
@@ -70,32 +60,12 @@
         refresh();
         setInterval(refresh, 5000);
 
-        let chart = new CanvasJS.Chart('chartContainer', {
-            title: {
-                text: 'Networking Data'
-            },
-            data: [{
-                type: 'line',
-                dataPoints: dps
-            }]
-        });
-
-        let updateChart = () => {
-            if(window.dps.length > 20) {
-                window.dps.shift();
-            }
-            window.dps.push(window._data);
-            chart.render();
-        }
-
-        updateChart();
-        setInterval(updateChart, 5000);
     });
 
     let refresh = () => {
         var request = new XMLHttpRequest();
 
-        request.open('GET', '/data', true);
+        request.open('GET', '/data.json', true);
 
         request.onload = function() {
             if(this.status >= 200 && this.status < 400) {
@@ -103,9 +73,9 @@
                 //let data = JSON.parse(this.response);
                 //console.log(this.response);
                 //document.getElementById('network-stats').innerHTML = this.response;
-                let data = this.response;
-                parseStats(data);
-                appendRow();
+                let data = JSON.parse(this.response);
+                //parseStats(data);
+                appendRow(data);
             } else {
                 //Request succeeded but with bad status code
             }
@@ -117,7 +87,7 @@
         request.send();
     }
 
-    let parseStats = data => {
+    /*let parseStats = data => {
         let _split = data.split('\n');
 
         window._data.time = _split[0].split(':')[1];
@@ -130,28 +100,25 @@
         window._data.receiveBuffer = _split[7].split(':')[1];
 
         window._history.push(window._data);
-    }
+    }*/
 
-    let appendRow = () => {
+    let appendRow = data => {
+        console.log(data);
         let table = document.getElementById('network-stats-table');
 
         let newRow = table.insertRow(-1);
         var c0 = newRow.insertCell(0);
         var c1 = newRow.insertCell(1);
         var c2 = newRow.insertCell(2);
-        var c3 = newRow.insertCell(3);
-        var c4 = newRow.insertCell(4);
-        var c5 = newRow.insertCell(5);
-        var c6 = newRow.insertCell(6);
-        var c7 = newRow.insertCell(7);
-        c0.innerHTML = window._data.time;
-        c1.innerHTML = window._data.connections;
-        c2.innerHTML = window._data.maxSendRate;
-        c3.innerHTML = window._data.maxRecvRate;
-        c4.innerHTML = window._data.sendQueue;
-        c5.innerHTML = window._data.receiveQueue;
-        c6.innerHTML = window._data.sendBuffer;
-        c7.innerHTML = window._data.receiveBuffer;
+        c0.innerHTML = Date();
+        /*if(data.in) {
+            c1.innerHTML = data.in.content.data[0];
+        }
+        if(data.out) {
+            c2.innerHTML = data.out.content.data[0];
+        }*/
+        c1.innerHTML = data.in;
+        c2.innerHTML = data.out;
     }
 </script>
 </html>
