@@ -10,7 +10,7 @@ const amqp = require('amqplib/callback_api');
 
 (async () => {
 
-    let __data = {in: 0, out: 0};
+    let __data = {in: 0, out: 0, rtt: 0, time: 0};
     //todo: set 5-second rolling window.
     //todo: set data every time we pull
 
@@ -32,7 +32,7 @@ const amqp = require('amqplib/callback_api');
             }, async (e2, q) => {
                 if(e2) throw e2;
 
-                console.log(`waiiting for messages in ${q.queue}`);
+                console.log(`waiting for messages in ${q.queue}`);
                 channel.bindQueue(q.queue, exchangeIn, '');
 
                 channel.consume(q.queue, msg => {
@@ -53,7 +53,7 @@ const amqp = require('amqplib/callback_api');
             }, async (e2, q) => {
                 if(e2) throw e2;
 
-                console.log(`waiiting for messages in ${q.queue}`);
+                console.log(`waiting for messages in ${q.queue}`);
                 channel.bindQueue(q.queue, exchangeOut, '');
 
                 channel.consume(q.queue, msg => {
@@ -63,13 +63,48 @@ const amqp = require('amqplib/callback_api');
                     }
                 }, {noAck: true});
             });
+
+            channel.assertExchange('data-rtt', 'fanout', { durable: false });
+            channel.assertQueue('', {
+                exclusive: true
+            }, async (e3, q) => {
+                if(e3) throw e3;
+
+                console.log(`waiting for messages in ${q.queue}`);
+                channel.bindQueue(q.queue, 'data-rtt', '');
+
+                channel.consume(q.eueue, msg => {
+                    if(msg.content) {
+                        console.log('data[rtt] ' + msg.content.toString());
+                        __data.rtt = msg.content.toString();
+                    }
+                }, {noAck: true});
+            });
+
+            channel.assertExchange('data-time', 'fanout', { durable: false });
+            channel.assertQueue('', {
+                exclusive: true
+            }, async (e3, q) => {
+                if(e3) throw e3;
+
+                console.log(`waiting for messages in ${q.queue}`);
+                channel.bindQueue(q.queue, 'data-time', '');
+
+                channel.consume(q.eueue, msg => {
+                    if(msg.content) {
+                        console.log('data[time] ' + msg.content.toString());
+                        __data.time = msg.content.toString();
+                    }
+                }, {noAck: true});
+            });
         })
     });
     
-    setTimeout(() => {
+    /*setInterval(() => {
         __data.in = 0;
         __data.out = 0;
     }, 1000); //clear every N seconds
+    */
 
     /*__data.in = Math.floor(Math.random() * 100);
     __data.out = Math.floor(Math.random() * 100);
