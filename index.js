@@ -1,6 +1,8 @@
 //Entry point to web server
 //Should be visible at 44.203.161.83 once deployed + port 80 opened
 
+//https://plotly.com/javascript/line-charts/
+
 const http = require('http');
 const fs = require('fs');
 //const redis = require('redis');
@@ -12,6 +14,7 @@ const amqp = require('amqplib/callback_api');
     //todo: set 5-second rolling window.
     //todo: set data every time we pull
 
+        
     amqp.connect('amqp://localhost', async (e0, conn) => {
         if(e0) throw e0; //todo: fix
 
@@ -60,10 +63,21 @@ const amqp = require('amqplib/callback_api');
                     }
                 }, {noAck: true});
             });
-
         })
-
     });
+    
+    setTimeout(() => {
+        __data.in = 0;
+        __data.out = 0;
+    }, 1000); //clear every N seconds
+
+    /*__data.in = Math.floor(Math.random() * 100);
+    __data.out = Math.floor(Math.random() * 100);
+
+    setInterval(() => {
+        __data.in = Math.floor(Math.random() * 100);
+        __data.out = Math.floor(Math.random() * 100);
+    }, 1000);*/
 
     const server = http.createServer(async (request, response) => {
         console.log(request.url);
@@ -82,7 +96,8 @@ const amqp = require('amqplib/callback_api');
             console.log('GET /data.json');
             response.writeHead(200);
             response.end(JSON.stringify(__data));
-            __data = {in: 0, out: 0};
+            //__data = {in: 0, out: 0}; // clear data
+            //todo: clear data on an interval (in refresh)
         }
     });
     server.listen(3000);
@@ -92,4 +107,3 @@ const amqp = require('amqplib/callback_api');
 //serve index.html file
 //create backend api with statistics
 //create graph with statistics?
-

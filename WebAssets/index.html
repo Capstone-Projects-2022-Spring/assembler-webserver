@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
 </head>
 <body>
+    <style>
+        #tableDiv {
+            height: 100%;
+            overflow-y: auto;
+        }
+    </style>
     <section class="hero is-success block">
         <div class="hero-body">
             <p class="title">
@@ -19,7 +25,7 @@
     </section>
     <section>
         <div class="columns">
-            <div class="column is-half">
+            <div class="column is-half" id="tableDiv">
                 <table class="table" id="network-stats-table">
                     <thead>
                         <tr>
@@ -32,21 +38,22 @@
                 </table>
             </div>
             <div class="column is-half">
-                <div id="chartContainer" style="height:400px;width:100%;"></canvas>
+                <div id="viz" style="width:600px;height:300px;"></div>
             </div>
         </div>
     </section>
 </body>
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/d3.v6.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
 <script>
     window._data = {
         time: 0,
         packetsOut: 0,
         packetsIn: 0
     };
-
-    window._history = [];
-    window.dps = [];
+    window.xHistory = [];
+    window.yHistory = [];
+    //window._history = [];
 
     (function ready(fn) {
         if(document.readyState != 'loading') {
@@ -56,12 +63,46 @@
         }
     })(function() {
         //will be executed when document is ready
-        console.log('test');
+        console.log('ready(fn) fired.');
         refresh();
         setInterval(refresh, 5000);
 
-    });
+        let TEST = document.getElementById('viz');
 
+        /*Plotly.newPlot( TEST, [{
+        x: [1, 2, 3, 4, 5],
+        y: [1, 2, 4, 8, 16] }],
+        { margin: { t: 0 } }
+        );*/
+        /*let margin = {top: 10, right: 30, bottom: 30, left: 60},
+            width = 460 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+        window.svg = d3.select('#viz')
+            .append('svg')
+                .attr('width', width+margin.left+margin.right)
+                .attr('height', height+margin.top+margin.bottom)
+            .append('g')
+                .attr('transform', 'translate(' + margin.left + ',' + margin.top+')');
+
+        window.xScale = d3.scaleLinear()
+            .range([0,width-margin.left-margin.right]);
+
+        window.yScale = d3.scaleLinear()
+            .range([height-margin.top-margin.bottom,0]);
+
+        window.line = d3.line()
+            .x(d => xScale(d.x))
+            .y(d => yScale(d.y))
+            .curve(d3.curveMonotoneX);
+        */
+        /*fetch('http://localhost:3000/data.json')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            });*/
+        
+    });
     let refresh = () => {
         var request = new XMLHttpRequest();
 
@@ -70,12 +111,14 @@
         request.onload = function() {
             if(this.status >= 200 && this.status < 400) {
                 //Request successful, payload in this.response
-                //let data = JSON.parse(this.response);
-                //console.log(this.response);
-                //document.getElementById('network-stats').innerHTML = this.response;
                 let data = JSON.parse(this.response);
-                //parseStats(data);
                 appendRow(data);
+                
+                window.xHistory.push(Date());
+                window.yHistory.push(data.in+data.out);
+
+                plot(document.getElementById('viz'));
+                //render();
             } else {
                 //Request succeeded but with bad status code
             }
@@ -87,21 +130,6 @@
         request.send();
     }
 
-    /*let parseStats = data => {
-        let _split = data.split('\n');
-
-        window._data.time = _split[0].split(':')[1];
-        window._data.connections = _split[1].split(':')[1];
-        window._data.maxSendRate = _split[2].split(':')[1];
-        window._data.maxRecvRate = _split[3].split(':')[1];
-        window._data.sendQueue = _split[4].split(':')[1];
-        window._data.receiveQueue = _split[5].split(':')[1];
-        window._data.sendBuffer = _split[6].split(':')[1];
-        window._data.receiveBuffer = _split[7].split(':')[1];
-
-        window._history.push(window._data);
-    }*/
-
     let appendRow = data => {
         console.log(data);
         let table = document.getElementById('network-stats-table');
@@ -110,15 +138,42 @@
         var c0 = newRow.insertCell(0);
         var c1 = newRow.insertCell(1);
         var c2 = newRow.insertCell(2);
+
         c0.innerHTML = Date();
-        /*if(data.in) {
-            c1.innerHTML = data.in.content.data[0];
-        }
-        if(data.out) {
-            c2.innerHTML = data.out.content.data[0];
-        }*/
+
         c1.innerHTML = data.in;
         c2.innerHTML = data.out;
+    }
+    /*let render = () => {
+        let d = window._history;
+
+        const yMin = d.reduce((p, c) => {
+            return Math.min(p.y, c.y);
+        });
+
+        const yMax = d.reduce((p, c) => {
+            return Math.max(p.y,c.y);
+        });
+
+        yScale.domain([yMin,yMax]);
+
+        const yAxis = d3.axisLeft().scale(yScale);
+
+        svg.selectAll('.y.axis').remove();
+
+        svg.append('g').attr('class', 'y axis').call(yAxis);
+
+        svg.selectAll('.line').remove();
+
+        const lines = svg.selectAll('.line').data(window._history).attr('class', 'line');
+
+        lines.enter().append('path')
+            .attr('class', 'line')
+            .attr('d', line)
+            .attr('stroke', 'blue');
+    }*/
+    let plot = dest => {
+        Plotly.newPlot(dest, [{x: window.xHistory, y: window.yHistory}], { margin: { t: 0 } }, {title: 'Network Throughput'});
     }
 </script>
 </html>
