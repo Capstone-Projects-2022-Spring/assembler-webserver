@@ -73,7 +73,7 @@ const amqp = require('amqplib/callback_api');
                 console.log(`waiting for messages in ${q.queue}`);
                 channel.bindQueue(q.queue, 'data-rtt', '');
 
-                channel.consume(q.eueue, msg => {
+                channel.consume(q.queue, msg => {
                     if(msg.content) {
                         console.log('data[rtt] ' + msg.content.toString());
                         __data.rtt = msg.content.toString();

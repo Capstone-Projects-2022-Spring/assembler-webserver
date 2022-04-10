@@ -114,7 +114,7 @@
                 let data = JSON.parse(this.response);
                 appendRow(data);
                 
-                window.xHistory.push(Date());
+                window.xHistory.push(data.time);
                 window.yHistory.push(data.in+data.out);
 
                 plot(document.getElementById('viz'));
