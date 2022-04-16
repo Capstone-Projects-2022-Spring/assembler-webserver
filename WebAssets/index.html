@@ -25,25 +25,24 @@
     </section>
     <section>
         <div class="columns">
-            <div class="column is-half" id="tableDiv">
+            <!--- <div class="column is-half" id="tableDiv">
                 <table class="table" id="network-stats-table">
                     <thead>
                         <tr>
                             <th>Server Time</th>
-                            <th>Packets Out</th>
                             <th>Packets In</th>
+                            <th>Packets Out</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
-            </div>
-            <div class="column is-half">
-                <div id="viz" style="width:600px;height:300px;"></div>
+            </div> -->
+            <div class="column is-full">
+                <div id="viz" style="width:1000px;"></div>
             </div>
         </div>
     </section>
 </body>
-<script src="https://d3js.org/d3.v6.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
 <script>
     window._data = {
@@ -53,7 +52,7 @@
     };
     window.xHistory = [];
     window.yHistory = [];
-    //window._history = [];
+    window.deltaYHistory = [];
 
     (function ready(fn) {
         if(document.readyState != 'loading') {
@@ -65,44 +64,10 @@
         //will be executed when document is ready
         console.log('ready(fn) fired.');
         refresh();
-        setInterval(refresh, 5000);
-
-        let TEST = document.getElementById('viz');
-
-        /*Plotly.newPlot( TEST, [{
-        x: [1, 2, 3, 4, 5],
-        y: [1, 2, 4, 8, 16] }],
-        { margin: { t: 0 } }
-        );*/
-        /*let margin = {top: 10, right: 30, bottom: 30, left: 60},
-            width = 460 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
-
-        window.svg = d3.select('#viz')
-            .append('svg')
-                .attr('width', width+margin.left+margin.right)
-                .attr('height', height+margin.top+margin.bottom)
-            .append('g')
-                .attr('transform', 'translate(' + margin.left + ',' + margin.top+')');
-
-        window.xScale = d3.scaleLinear()
-            .range([0,width-margin.left-margin.right]);
-
-        window.yScale = d3.scaleLinear()
-            .range([height-margin.top-margin.bottom,0]);
-
-        window.line = d3.line()
-            .x(d => xScale(d.x))
-            .y(d => yScale(d.y))
-            .curve(d3.curveMonotoneX);
-        */
-        /*fetch('http://localhost:3000/data.json')
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-            });*/
-        
+        setInterval(refresh, 1000);
+        //TODO: add instantaneous roc
     });
+
     let refresh = () => {
         var request = new XMLHttpRequest();
 
@@ -112,10 +77,15 @@
             if(this.status >= 200 && this.status < 400) {
                 //Request successful, payload in this.response
                 let data = JSON.parse(this.response);
-                appendRow(data);
+                //appendRow(data);
                 
-                window.xHistory.push(data.time);
-                window.yHistory.push(data.in+data.out);
+                window.xHistory.push(data.time); //x value is server time
+
+                let n = window.yHistory.length || 1;
+                let deltaY = (data.in + data.out) - window.yHistory[n-1];
+
+                window.yHistory.push(data.in + data.out);
+                window.deltaYHistory.push(deltaY);
 
                 plot(document.getElementById('viz'));
                 //render();
@@ -144,36 +114,23 @@
         c1.innerHTML = data.in;
         c2.innerHTML = data.out;
     }
-    /*let render = () => {
-        let d = window._history;
 
-        const yMin = d.reduce((p, c) => {
-            return Math.min(p.y, c.y);
-        });
-
-        const yMax = d.reduce((p, c) => {
-            return Math.max(p.y,c.y);
-        });
-
-        yScale.domain([yMin,yMax]);
-
-        const yAxis = d3.axisLeft().scale(yScale);
-
-        svg.selectAll('.y.axis').remove();
-
-        svg.append('g').attr('class', 'y axis').call(yAxis);
-
-        svg.selectAll('.line').remove();
-
-        const lines = svg.selectAll('.line').data(window._history).attr('class', 'line');
-
-        lines.enter().append('path')
-            .attr('class', 'line')
-            .attr('d', line)
-            .attr('stroke', 'blue');
-    }*/
     let plot = dest => {
-        Plotly.newPlot(dest, [{x: window.xHistory, y: window.yHistory}], { margin: { t: 0 } }, {title: 'Network Throughput'});
+
+        let data = [{x: window.xHistory, y: window.deltaYHistory}];
+
+        let layout = {
+            title: 'Network Throughput',
+            xaxis: {
+                title: 'Server Time'
+            },
+            yaxis: {
+                title: 'Network Throughput (packets per second)'
+            }
+        }
+
+        Plotly.newPlot(dest, data, layout);
+        //todo: change?
     }
 </script>
 </html>
