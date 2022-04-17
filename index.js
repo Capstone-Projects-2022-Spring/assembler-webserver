@@ -138,7 +138,7 @@ require('dotenv').config();
             //todo: clear data on an interval (in refresh)
         }
     });
-    server.listen(80);
+    server.listen(3000);
 })();
 
 
