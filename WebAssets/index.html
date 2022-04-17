@@ -82,10 +82,22 @@
                 window.xHistory.push(data.time); //x value is server time
 
                 let n = window.yHistory.length || 1;
+
                 let deltaY = (data.in + data.out) - window.yHistory[n-1];
 
                 window.yHistory.push(data.in + data.out);
                 window.deltaYHistory.push(deltaY);
+
+                //todo: let overflow be a variable / slider
+                if(n > 30) { //too much history, truncate to 30
+                    let overflow = n - 30;
+
+                    window.xHistory.splice(0, overflow);
+                    window.yHistory.splice(0, overflow);
+                    window.deltaYHistory.splice(0, overflow);
+
+                    n = window.yHistory.length;
+                }
 
                 plot(document.getElementById('viz'));
                 //render();
@@ -130,7 +142,7 @@
         }
 
         Plotly.newPlot(dest, data, layout);
-        //todo: change?
+        //todo: change
     }
 </script>
 </html>

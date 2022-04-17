@@ -7,119 +7,120 @@ const http = require('http');
 const fs = require('fs');
 //const redis = require('redis');
 const amqp = require('amqplib/callback_api');
+require('dotenv').config();
 
 (async () => {
-
-    let __data = {in: 0, out: 0, rtt: 0, time: 0};
+    let __data = {in: 0, out: 0, rtt: 0, time: 0, connected: false};
     //todo: set 5-second rolling window.
     //todo: set data every time we pull
 
-    /*    
-    amqp.connect('amqp://localhost', async (e0, conn) => {
-        if(e0) throw e0; //todo: fix
-
-        conn.createChannel(async (e1, channel) => {
-            if(e1) throw e1;
-
-            const exchangeIn = 'data-in';
-
-            channel.assertExchange(exchangeIn, 'fanout', {
-                durable: false
-            });
-
-            channel.assertQueue('', {
-                exclusive: true
-            }, async (e2, q) => {
-                if(e2) throw e2;
-
-                console.log(`waiting for messages in ${q.queue}`);
-                channel.bindQueue(q.queue, exchangeIn, '');
-
-                channel.consume(q.queue, msg => {
-                    if(msg.content) {
-                        console.log("[data-in] " + msg.content.toString());
-                        __data.in += parseInt(msg.content.toString());
-                    }
-                }, {noAck: true});
-            });
-            const exchangeOut = 'data-out';
-
-            channel.assertExchange(exchangeOut, 'fanout', {
-                durable: false
-            });
-
-            channel.assertQueue('', {
-                exclusive: true
-            }, async (e2, q) => {
-                if(e2) throw e2;
-
-                console.log(`waiting for messages in ${q.queue}`);
-                channel.bindQueue(q.queue, exchangeOut, '');
-
-                channel.consume(q.queue, msg => {
-                    if(msg.content) {
-                        console.log("[data-out] " + msg.content.toString());
-                        __data.out += parseInt(msg.content.toString());
-                    }
-                }, {noAck: true});
-            });
-
-            channel.assertExchange('data-rtt', 'fanout', { durable: false });
-            channel.assertQueue('', {
-                exclusive: true
-            }, async (e3, q) => {
-                if(e3) throw e3;
-
-                console.log(`waiting for messages in ${q.queue}`);
-                channel.bindQueue(q.queue, 'data-rtt', '');
-
-                channel.consume(q.queue, msg => {
-                    if(msg.content) {
-                        console.log('data[rtt] ' + msg.content.toString());
-                        __data.rtt = msg.content.toString();
-                    }
-                }, {noAck: true});
-            });
-
-            channel.assertExchange('data-time', 'fanout', { durable: false });
-            channel.assertQueue('', {
-                exclusive: true
-            }, async (e3, q) => {
-                if(e3) throw e3;
-
-                console.log(`waiting for messages in ${q.queue}`);
-                channel.bindQueue(q.queue, 'data-time', '');
-
-                channel.consume(q.eueue, msg => {
-                    if(msg.content) {
-                        console.log('data[time] ' + msg.content.toString());
-                        __data.time = msg.content.toString();
-                    }
-                }, {noAck: true});
-            });
-        })
-    });
-    */
-
-    /*setInterval(() => {
-        __data.in = 0;
-        __data.out = 0;
-    }, 1000); //clear every N seconds
-    */
-
-    __data.in = Math.floor(Math.random() * 100);
-    __data.out = Math.floor(Math.random() * 100);
-
-    setInterval(() => {
-        __data.time += 1;
+    if(process.env.BOX === "DEV") {
+        __data.connected = true;
         __data.in = Math.floor(Math.random() * 100);
         __data.out = Math.floor(Math.random() * 100);
-    }, 1000);
+
+        setInterval(() => {
+            __data.time += 1;
+            __data.in = Math.floor(Math.random() * 100);
+            __data.out = Math.floor(Math.random() * 100);
+        }, 1000);
+    } else {
+        amqp.connect('amqp://localhost', async (e0, conn) => {
+            if(e0) throw e0; //todo: fix
+    
+            conn.createChannel(async (e1, channel) => {
+                if(e1) throw e1;
+    
+                __data.connected = true;
+    
+                const exchangeIn = 'data-in';
+    
+                channel.assertExchange(exchangeIn, 'fanout', {
+                    durable: false
+                });
+    
+                channel.assertQueue('', {
+                    exclusive: true
+                }, async (e2, q) => {
+                    if(e2) throw e2;
+    
+                    console.log(`waiting for messages in ${q.queue}`);
+                    channel.bindQueue(q.queue, exchangeIn, '');
+    
+                    channel.consume(q.queue, msg => {
+                        if(msg.content) {
+                            console.log("[data-in] " + msg.content.toString());
+                            __data.in += parseInt(msg.content.toString());
+                        }
+                    }, {noAck: true});
+                });
+                const exchangeOut = 'data-out';
+    
+                channel.assertExchange(exchangeOut, 'fanout', {
+                    durable: false
+                });
+    
+                channel.assertQueue('', {
+                    exclusive: true
+                }, async (e2, q) => {
+                    if(e2) throw e2;
+    
+                    console.log(`waiting for messages in ${q.queue}`);
+                    channel.bindQueue(q.queue, exchangeOut, '');
+    
+                    channel.consume(q.queue, msg => {
+                        if(msg.content) {
+                            console.log("[data-out] " + msg.content.toString());
+                            __data.out += parseInt(msg.content.toString());
+                        }
+                    }, {noAck: true});
+                });
+    
+                channel.assertExchange('data-rtt', 'fanout', { durable: false });
+                channel.assertQueue('', {
+                    exclusive: true
+                }, async (e3, q) => {
+                    if(e3) throw e3;
+    
+                    console.log(`waiting for messages in ${q.queue}`);
+                    channel.bindQueue(q.queue, 'data-rtt', '');
+    
+                    channel.consume(q.queue, msg => {
+                        if(msg.content) {
+                            console.log('data[rtt] ' + msg.content.toString());
+                            __data.rtt = msg.content.toString();
+                        }
+                    }, {noAck: true});
+                });
+    
+                channel.assertExchange('data-time', 'fanout', { durable: false });
+                channel.assertQueue('', {
+                    exclusive: true
+                }, async (e3, q) => {
+                    if(e3) throw e3;
+    
+                    console.log(`waiting for messages in ${q.queue}`);
+                    channel.bindQueue(q.queue, 'data-time', '');
+    
+                    channel.consume(q.queue, msg => {
+                        if(msg.content) {
+                            console.log('data[time] ' + msg.content.toString());
+                            __data.time = msg.content.toString();
+                        }
+                    }, {noAck: true});
+                });
+            })
+        });
+    
+        setInterval(() => {
+            __data.in = 0;
+            __data.out = 0;
+        }, 1000); //clear every N seconds
+    }
 
     const server = http.createServer(async (request, response) => {
-        console.log(request.url);
-        if(request.url === '/') {
-            console.log('GET /');
+        if(request.url === '/status') {
+            console.log('GET /status');
             fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
                 if(err) {
                     response.writeHead(404);
@@ -137,7 +138,7 @@ const amqp = require('amqplib/callback_api');
             //todo: clear data on an interval (in refresh)
         }
     });
-    server.listen(3000);
+    server.listen(80);
 })();
 
 
