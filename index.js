@@ -4,6 +4,8 @@
 //https://plotly.com/javascript/line-charts/
 
 const http = require('http');
+const https = require('https');
+
 const fs = require('fs');
 //const redis = require('redis');
 const amqp = require('amqplib/callback_api');
@@ -118,27 +120,59 @@ require('dotenv').config();
         }, 1000); //clear every N seconds
     }
 
-    const server = http.createServer(async (request, response) => {
-        if(request.url === '/status') {
-            console.log('GET /status');
-            fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
-                if(err) {
-                    response.writeHead(404);
-                    response.end(JSON.stringify(err));
-                }
+
+    let server;
+
+    if(process.env.BOX === 'DEV') {
+        server = http.createServer(async (request, response) => {
+            if(request.url === '/status') {
+                console.log('GET /status');
+                fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
+                    if(err) {
+                        response.writeHead(404);
+                        response.end(JSON.stringify(err));
+                    }
+                    response.writeHead(200);
+                    response.end(data);
+                });    
+            }
+            if(request.url === '/data.json') {
+                console.log('GET /data.json');
                 response.writeHead(200);
-                response.end(data);
-            });    
-        }
-        if(request.url === '/data.json') {
-            console.log('GET /data.json');
-            response.writeHead(200);
-            response.end(JSON.stringify(__data));
-            //__data = {in: 0, out: 0}; // clear data
-            //todo: clear data on an interval (in refresh)
-        }
-    });
-    server.listen(3000);
+                response.end(JSON.stringify(__data));
+                //__data = {in: 0, out: 0}; // clear data
+                //todo: clear data on an interval (in refresh)
+            }
+        });
+        server.listen(3000);
+    } else {
+        let options = {
+            key: fs.readFileSync('./key.pem'),
+            cert: fs.readFileSync('./cert.pem')
+        };
+
+        https.createServer(options, async(request, response) => {
+            if(request.url === '/status') {
+                console.log('GET /status');
+                fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
+                    if(err) {
+                        response.writeHead(404);
+                        response.end(JSON.stringify(err));
+                    }
+                    response.writeHead(200);
+                    response.end(data);
+                });    
+            }
+            if(request.url === '/data.json') {
+                console.log('GET /data.json');
+                response.writeHead(200);
+                response.end(JSON.stringify(__data));
+                //__data = {in: 0, out: 0}; // clear data
+                //todo: clear data on an interval (in refresh)
+            }
+
+        }).listen(3000);
+    }
 })();
 
 
