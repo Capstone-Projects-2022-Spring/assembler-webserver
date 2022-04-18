@@ -122,8 +122,8 @@ require('dotenv').config();
 
 
     const server = http.createServer(async (request, response) => {
-        if(request.url === '/status') {
-            console.log('GET /status');
+        if(request.url === '/') {
+            console.log('GET /');
             fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
                 if(err) {
                     response.writeHead(404);
@@ -131,7 +131,18 @@ require('dotenv').config();
                 }
                 response.writeHead(200);
                 response.end(data);
-            });    
+            });
+        }
+        if(request.url === '/status') {
+            console.log('GET /status');
+            fs.readFile(__dirname + '/WebAssets/status.html', (err, data) => {
+                if(err) {
+                    response.writeHead(404);
+                    response.end(JSON.stringify(err));
+                }
+                response.writeHead(200);
+                response.end(data);
+            });
         }
         if(request.url === '/data.json') {
             console.log('GET /data.json');

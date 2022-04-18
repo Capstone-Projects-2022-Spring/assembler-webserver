@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,142 +8,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
 </head>
 <body>
-    <style>
-        #tableDiv {
-            height: 100%;
-            overflow-y: auto;
-        }
-    </style>
-    <section class="hero is-success block">
+    <section class="hero is-link is-fullheight">
         <div class="hero-body">
-            <p class="title">
-                Assembler Status console
-            </p>
-            <p class="subtitle">
-                All services are working properly.
-            </p>
-        </div>
-    </section>
-    <section>
-        <div class="columns">
-            <!--- <div class="column is-half" id="tableDiv">
-                <table class="table" id="network-stats-table">
-                    <thead>
-                        <tr>
-                            <th>Server Time</th>
-                            <th>Packets In</th>
-                            <th>Packets Out</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div> -->
-            <div class="column is-full">
-                <div id="viz" style="width:1000px;"></div>
+            <div>
+                <p class="title">Welcome to Assembler!</p>
+                <a class="subtitle" href="https://github.com/Capstone-Projects-2022-Spring/project-assembler/releases">Download the game here.</p>
+                <a class="subtitle" href="/status" target="_blank">Monitor the status.</p>
             </div>
         </div>
     </section>
 </body>
-<script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
-<script>
-    window._data = {
-        time: 0,
-        packetsOut: 0,
-        packetsIn: 0
-    };
-    window.xHistory = [];
-    window.yHistory = [];
-    window.deltaYHistory = [];
-
-    (function ready(fn) {
-        if(document.readyState != 'loading') {
-            fn();
-        } else {
-            document.addEventListener('DOMContentLoaded', fn);
-        }
-    })(function() {
-        //will be executed when document is ready
-        console.log('ready(fn) fired.');
-        refresh();
-        setInterval(refresh, 1000);
-        //TODO: add instantaneous roc
-    });
-
-    let refresh = () => {
-        var request = new XMLHttpRequest();
-
-        request.open('GET', '/data.json', true);
-
-        request.onload = function() {
-            if(this.status >= 200 && this.status < 400) {
-                //Request successful, payload in this.response
-                let data = JSON.parse(this.response);
-                //appendRow(data);
-                
-                window.xHistory.push(data.time); //x value is server time
-
-                let n = window.yHistory.length || 1;
-
-                let deltaY = (data.in + data.out) - window.yHistory[n-1];
-
-                window.yHistory.push(data.in + data.out);
-                window.deltaYHistory.push(deltaY);
-
-                //todo: let overflow be a variable / slider
-                if(n > 30) { //too much history, truncate to 30
-                    let overflow = n - 30;
-
-                    window.xHistory.splice(0, overflow);
-                    window.yHistory.splice(0, overflow);
-                    window.deltaYHistory.splice(0, overflow);
-
-                    n = window.yHistory.length;
-                }
-
-                plot(document.getElementById('viz'));
-                //render();
-            } else {
-                //Request succeeded but with bad status code
-            }
-        }
-        request.onerror = function() {
-                console.log('an error occurred during the request.');
-            }
-
-        request.send();
-    }
-
-    let appendRow = data => {
-        console.log(data);
-        let table = document.getElementById('network-stats-table');
-
-        let newRow = table.insertRow(-1);
-        var c0 = newRow.insertCell(0);
-        var c1 = newRow.insertCell(1);
-        var c2 = newRow.insertCell(2);
-
-        c0.innerHTML = data.time;
-
-        c1.innerHTML = data.in;
-        c2.innerHTML = data.out;
-    }
-
-    let plot = dest => {
-
-        let data = [{x: window.xHistory, y: window.deltaYHistory}];
-
-        let layout = {
-            title: 'Network Throughput',
-            xaxis: {
-                title: 'Server Time'
-            },
-            yaxis: {
-                title: 'Network Throughput (packets per second)'
-            }
-        }
-
-        Plotly.newPlot(dest, data, layout);
-        //todo: change
-    }
-</script>
 </html>
