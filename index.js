@@ -133,6 +133,17 @@ require('dotenv').config();
                 response.end(data);
             });
         }
+        if(request.url === '/download') {
+            console.log('GET /download');
+            fs.readFile(__dirname + '/WebAssets/download.html', (err, data) => {
+                if(err) {
+                    response.writeHead(404);
+                    response.end(JSON.stringify(err));
+                }
+                response.writeHead(200);
+                response.end(data);
+            });
+        }
         if(request.url === '/status') {
             console.log('GET /status');
             fs.readFile(__dirname + '/WebAssets/status.html', (err, data) => {
