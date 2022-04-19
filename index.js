@@ -122,45 +122,57 @@ require('dotenv').config();
 
 
     const server = http.createServer(async (request, response) => {
-        if(request.url === '/') {
-            console.log('GET /');
-            fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
-                if(err) {
-                    response.writeHead(404);
-                    response.end(JSON.stringify(err));
-                }
+        switch(request.url) {
+            case '/':
+                console.log('GET /');
+                fs.readFile(__dirname + '/WebAssets/index.html', (err, data) => {
+                    if(err) {
+                        response.writeHead(404);
+                        response.end(JSON.stringify(err));
+                    }
+                    response.writeHead(200);
+                    response.end(data);
+                });
+                break;
+            case '/download': 
+                console.log('GET /download');
+                fs.readFile(__dirname + '/WebAssets/download.html', (err, data) => {
+                    if(err) {
+                        response.writeHead(404);
+                        response.end(JSON.stringify(err));
+                    }
+                    response.writeHead(200);
+                    response.end(data);
+                });
+                break;
+            case '/status':
+                console.log('GET /status');
+                fs.readFile(__dirname + '/WebAssets/status.html', (err, data) => {
+                    if(err) {
+                        response.writeHead(404);
+                        response.end(JSON.stringify(err));
+                    }
+                    response.writeHead(200);
+                    response.end(data);
+                });
+                break;
+            case '/data.json':
+                console.log('GET /data.json');
                 response.writeHead(200);
-                response.end(data);
-            });
+                response.end(JSON.stringify(__data));
+                //__data = {in: 0, out: 0}; // clear data
+                //todo: clear data on an interval (in refresh)
+                break;
+            default:
+                console.log('default fired');
+        }
+        if(request.url === '/') {
         }
         if(request.url === '/download') {
-            console.log('GET /download');
-            fs.readFile(__dirname + '/WebAssets/download.html', (err, data) => {
-                if(err) {
-                    response.writeHead(404);
-                    response.end(JSON.stringify(err));
-                }
-                response.writeHead(200);
-                response.end(data);
-            });
         }
         if(request.url === '/status') {
-            console.log('GET /status');
-            fs.readFile(__dirname + '/WebAssets/status.html', (err, data) => {
-                if(err) {
-                    response.writeHead(404);
-                    response.end(JSON.stringify(err));
-                }
-                response.writeHead(200);
-                response.end(data);
-            });
         }
         if(request.url === '/data.json') {
-            console.log('GET /data.json');
-            response.writeHead(200);
-            response.end(JSON.stringify(__data));
-            //__data = {in: 0, out: 0}; // clear data
-            //todo: clear data on an interval (in refresh)
         }
     });
     server.listen(3000);
