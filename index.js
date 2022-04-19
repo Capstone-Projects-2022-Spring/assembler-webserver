@@ -12,7 +12,7 @@ const amqp = require('amqplib/callback_api');
 require('dotenv').config();
 
 (async () => {
-    let __data = {in: 0, out: 0, rtt: 0, time: 0, connected: false};
+    let __data = {in: 0, out: 0, rtt: 0, time: 0, connected: false, players: 0};
     //todo: set 5-second rolling window.
     //todo: set data every time we pull
 
@@ -111,6 +111,24 @@ require('dotenv').config();
                         }
                     }, {noAck: true});
                 });
+                
+                channel.assertExchange('data-players', 'fanout', { durable: false });
+                channel.assertQueue('', {
+                    exclusive: true
+                }, async (e3, q) => {
+                    if(e3) throw e3;
+    
+                    console.log(`waiting for messages in ${q.queue}`);
+                    channel.bindQueue(q.queue, 'data-players', '');
+    
+                    channel.consume(q.queue, msg => {
+                        if(msg.content) {
+                            if(process.env.BOX === "DEV") console.log('data[players] ' + msg.content.toString());
+                            __data.players = msg.content.toString();
+                        }
+                    }, {noAck: true});
+                });
+
             })
         });
     

@@ -90,6 +90,8 @@
             if(this.status >= 200 && this.status < 400) {
                 //Request successful, payload in this.response
                 let data = JSON.parse(this.response);
+                document.getElementById('herostatus').innerHTML = `All services are working properly. Players online: ${data.players}` ;
+                //TODO: do something with data.players
                 //appendRow(data);
                 
                 window.xHistory.push(data.time); //x value is server time
