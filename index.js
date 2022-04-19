@@ -164,16 +164,17 @@ require('dotenv').config();
                 //todo: clear data on an interval (in refresh)
                 break;
             default:
-                console.log('default fired');
+                console.log('GET ' + request.url);
+                fs.readFile(__dirname + '/WebAssets/static' + request.url, (err, data) => {
+                    if(err) {
+                        response.writeHead(404);
+                        response.end(JSON.stringify(err));
+                    }
+                    response.writeHead(200);
+                    response.end(data);
+                });
         }
-        if(request.url === '/') {
-        }
-        if(request.url === '/download') {
-        }
-        if(request.url === '/status') {
-        }
-        if(request.url === '/data.json') {
-        }
+
     });
     server.listen(3000);
 
