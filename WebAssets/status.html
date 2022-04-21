@@ -18,14 +18,16 @@
         }
     </style>
     <section class="hero is-warning block" id="heroheader">
-        <div class="hero-body">
-            <p class="title">
-                Assembler Status Monitoring Console
-            </p>
-            <p class="subtitle" id="herostatus">
-                Trying to connect to server.
-            </p>
-            <a class="subtitle" href="/">Back to homepage</a>
+        <div class="container">
+            <div class="hero-body">
+                <p class="title">
+                    Assembler Status Monitoring Console
+                </p>
+                <p class="subtitle" id="herostatus">
+                    Trying to connect to server.
+                </p>
+                <a class="subtitle" href="/">Back to homepage</a>
+            </div>    
         </div>
     </section>
     <section>
@@ -42,8 +44,25 @@
                     <tbody></tbody>
                 </table>
             </div> -->
-            <div class="column is-full">
-                <div id="viz" style="width:1000px;"></div>
+            <div class="column">
+                <div class="container">
+                    <p class="is-size-3">Networking Statistics</p>
+                    <div id="viz" style=""></div>    
+                </div>
+            </div>
+            <div class="column is-one-quarter">
+                <p class="is-size-3">In-Depth Statistics</p>
+                <div class="slidercontainer">
+                    <p class="is-size-5">Edit timeframe (default=30)</p>
+                    <input type="range" min="5" max="45" step="1" name="rangeslider" id="timeRange" onchange="onRangeChange()">
+                    <p id="timeRangeSelected">30</p>
+                </div>
+                <div class="movingaverages">
+                    <p class="is-size-5">Moving Averages</p>
+                    <p id="5ma">5 seconds: </p>
+                    <p id="10ma">10 second: </p>
+                    <p id="30ma">30 second: </p>
+                </div>
             </div>
         </div>
     </section>
@@ -58,6 +77,8 @@
     window.xHistory = [];
     window.yHistory = [];
     window.deltaYHistory = [];
+
+    window.timeRange = 30;
 
     (function ready(fn) {
         if(document.readyState != 'loading') {
@@ -75,6 +96,7 @@
         hero.classList.toggle('is-success');
 
         document.getElementById('herostatus').innerHTML = 'All services are working properly.';
+        document.getElementById('timeRange').value = '30';
 
         setInterval(refresh, 1000);
         //TODO: add instantaneous roc
@@ -90,7 +112,7 @@
             if(this.status >= 200 && this.status < 400) {
                 //Request successful, payload in this.response
                 let data = JSON.parse(this.response);
-                document.getElementById('herostatus').innerHTML = `All services are working properly. Players online: ${data.players}` ;
+                document.getElementById('herostatus').innerHTML = `All services are working properly. Players online: ${data.players}`;
                 //TODO: do something with data.players
                 //appendRow(data);
                 
@@ -98,14 +120,13 @@
 
                 let n = window.yHistory.length || 1;
 
-                let deltaY = (data.in + data.out) - window.yHistory[n-1];
-
+                let deltaY = (data.in + data.out);
                 window.yHistory.push(data.in + data.out);
                 window.deltaYHistory.push(deltaY);
 
                 //todo: let overflow be a variable / slider
-                if(n > 30) { //too much history, truncate to 30
-                    let overflow = n - 30;
+                if(n > window.timeRange) { //too much history, truncate to 30
+                    let overflow = n - window.timeRange;
 
                     window.xHistory.splice(0, overflow);
                     window.yHistory.splice(0, overflow);
@@ -113,6 +134,42 @@
 
                     n = window.yHistory.length;
                 }
+
+                let sum5 = 0;
+                let sum10 = 0;
+                let sum30 = 0;
+                //from n to n-60
+                if(n >= 5) {
+                    for(let t = (n-1); t > (n-1-5); t--)
+                    {
+                        if(!window.yHistory[t]) break;
+                        sum5 += parseInt(window.yHistory[t]);
+                    }
+                    document.getElementById('5ma').innerHTML = `5 second: ${sum5 / 5}`
+                }
+
+                if(n >= 10) {
+                    for(let u = (n-1); u > (n-1-10); u--)
+                    {
+                        if(!window.yHistory[u]) break;
+                        sum10 += parseInt(window.yHistory[u]);
+                    }
+                    document.getElementById('10ma').innerHTML = `10 second: ${sum10 / 10}`
+                }
+                if(n >= 30) {
+                    for(let v = (n-1); v > (n-1-30); v--)
+                    {
+                        if(!window.yHistory[v]) break; //todo: remove?
+                        sum30 += parseInt(window.yHistory[v]);
+                    }
+                    document.getElementById('30ma').innerHTML = `30 second: ${sum30 / 30}`
+                }
+
+                //document.getElementById('60ma').innerHTML = `1 minute: ${sum60 / 60}`;
+
+                //todo: compute moving averages here
+                //30second MA
+                //1min MA
 
                 plot(document.getElementById('viz'));
                 //render();
@@ -160,17 +217,28 @@
         let data = [{x: window.xHistory, y: window.deltaYHistory}];
 
         let layout = {
-            title: 'Network Throughput',
+            title: 'Network Throughput (total packets in+out)',
             xaxis: {
-                title: 'Server Time'
+                title: 'Time elapsed since server start'
             },
             yaxis: {
                 title: 'Network Throughput (packets per second)'
-            }
+            },
+            autosize: true
         }
 
         Plotly.newPlot(dest, data, layout);
         //todo: change
+    }
+
+    let onRangeChange = function() {
+        console.log(this.event);
+        let timeSelected = this.event.target.valueAsNumber;
+
+        console.log(timeSelected);
+
+        document.getElementById('timeRangeSelected').innerHTML = timeSelected;
+        window.timeRange = timeSelected;
     }
 </script>
 </html>
