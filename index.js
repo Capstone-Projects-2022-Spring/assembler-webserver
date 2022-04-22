@@ -176,7 +176,9 @@ require('dotenv').config();
                 break;
             case '/data.json':
                 console.log('GET /data.json');
-                response.writeHead(200);
+                response.writeHead(200, {
+                    'Content-Type': 'application/json'
+                });
                 response.end(JSON.stringify(__data));
                 //__data = {in: 0, out: 0}; // clear data
                 //todo: clear data on an interval (in refresh)
