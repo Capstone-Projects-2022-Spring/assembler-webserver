@@ -131,11 +131,6 @@ require('dotenv').config();
 
             })
         });
-    
-        setInterval(() => {
-            __data.in = 0;
-            __data.out = 0;
-        }, 1000); //clear every N seconds
     }
 
 
@@ -180,8 +175,9 @@ require('dotenv').config();
                     'Content-Type': 'application/json'
                 });
                 response.end(JSON.stringify(__data));
-                //__data = {in: 0, out: 0}; // clear data
-                //todo: clear data on an interval (in refresh)
+                //flush data
+                __data.in = 0;
+                __data.out = 0;
                 break;
             default:
                 console.log('GET ' + request.url);
