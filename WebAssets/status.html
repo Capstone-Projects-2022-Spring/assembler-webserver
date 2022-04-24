@@ -47,7 +47,8 @@
             <div class="column">
                 <div class="container">
                     <p class="is-size-3">Networking Statistics</p>
-                    <div id="viz" style=""></div>    
+                    <div id="viz" style="height:300px;"></div>    
+                    <div id="viz-ping" style="height:300px;"></div>    
                 </div>
             </div>
             <div class="column is-one-quarter">
@@ -196,7 +197,8 @@
                 document.getElementById('30ping').innerHTML = `30s average: ${sumPing / window.pingHistory.length}ms`;
 
 
-                plot(document.getElementById('viz'));
+                plotPackets(document.getElementById('viz'));
+                plotPing(document.getElementById('viz-ping'));
                 //render();
             } else {
                 //Request succeeded but with bad status code
@@ -237,7 +239,7 @@
         c2.innerHTML = data.out;
     }
 
-    let plot = dest => {
+    let plotPackets = dest => {
 
         let data = [{x: window.xHistory, y: window.deltaYHistory}];
 
@@ -254,6 +256,22 @@
 
         Plotly.newPlot(dest, data, layout);
         //todo: change
+    }
+
+    let plotPing = dest => {
+        let data = [{x: window.xHistory, y: window.pingHistory}];
+
+        let layout = {
+            title: '30-second Rolling Ping',
+            xaxis: {
+                title: 'Time elapsed since server start'
+            },
+            yaxis: {
+                title: 'Ping'
+            },
+            autosize: true
+        }
+        Plotly.newPlot(dest, data, layout);
     }
 
     let onRangeChange = function() {
