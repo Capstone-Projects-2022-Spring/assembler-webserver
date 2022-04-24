@@ -25,6 +25,7 @@ require('dotenv').config();
             __data.time += 1;
             __data.in = Math.floor(Math.random() * 100);
             __data.out = Math.floor(Math.random() * 100);
+            __data.rtt = Math.floor(Math.random() * 100);
         }, 1000);
     } else {
         amqp.connect('amqp://localhost', async (e0, conn) => {
@@ -131,8 +132,11 @@ require('dotenv').config();
 
             })
         });
+        setInterval(() => {
+            __data.in = 0;
+            __data.out = 0;
+        }, 1000);    
     }
-
 
     const server = http.createServer(async (request, response) => {
         switch(request.url) {
@@ -176,8 +180,8 @@ require('dotenv').config();
                 });
                 response.end(JSON.stringify(__data));
                 //flush data
-                __data.in = 0;
-                __data.out = 0;
+                //__data.in = 0;
+                //__data.out = 0;
                 break;
             default:
                 console.log('GET ' + request.url);

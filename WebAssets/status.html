@@ -63,6 +63,11 @@
                     <p id="10ma">10 second: </p>
                     <p id="30ma">30 second: </p>
                 </div>
+                <div class="ping">
+                    <p class="is-size-5">Ping</p>
+                    <p id="lastPing">Last Ping:</p>
+                    <p id="30ping">30s average:</p>
+                </div>
             </div>
         </div>
     </section>
@@ -79,6 +84,8 @@
     window.deltaYHistory = [];
 
     window.timeRange = 30;
+
+    window.pingHistory = [];
 
     (function ready(fn) {
         if(document.readyState != 'loading') {
@@ -98,7 +105,7 @@
         document.getElementById('herostatus').innerHTML = 'All services are working properly.';
         document.getElementById('timeRange').value = '30';
 
-        setInterval(refresh, 1000);
+        setInterval(refresh, 900);
         //TODO: add instantaneous roc
     });
 
@@ -171,6 +178,23 @@
                 //todo: compute moving averages here
                 //30second MA
                 //1min MA
+
+                window.pingHistory.push(data.rtt);
+                if(window.pingHistory.length > 30)
+                {
+                    let extra = window.pingHistory.length - 30;
+                    window.pingHistory.splice(0, extra);
+                }
+
+                document.getElementById('lastPing').innerHTML = `Last Ping: ${data.rtt}ms`;
+                
+                let sumPing = 0;
+                for(let p = 0; p < window.pingHistory.length; p++)
+                {
+                    sumPing += window.pingHistory[p];
+                }
+                document.getElementById('30ping').innerHTML = `30s average: ${sumPing / window.pingHistory.length}ms`;
+
 
                 plot(document.getElementById('viz'));
                 //render();
