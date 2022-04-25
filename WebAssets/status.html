@@ -192,7 +192,7 @@
                 let sumPing = 0;
                 for(let p = 0; p < window.pingHistory.length; p++)
                 {
-                    sumPing += window.pingHistory[p];
+                    sumPing += parseInt(window.pingHistory[p]);
                 }
                 document.getElementById('30ping').innerHTML = `30s average: ${sumPing / window.pingHistory.length}ms`;
 
