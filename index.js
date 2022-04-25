@@ -132,10 +132,10 @@ require('dotenv').config();
 
             })
         });
-        setInterval(() => {
+        /*setInterval(() => {
             __data.in = 0;
             __data.out = 0;
-        }, 1000);    
+        }, 1000);    */
     }
 
     const server = http.createServer(async (request, response) => {
@@ -192,6 +192,8 @@ require('dotenv').config();
                     }
                     response.writeHead(200);
                     response.end(data);
+                    __data.in = 0;
+                    __data.out = 0;
                 });
         }
 
